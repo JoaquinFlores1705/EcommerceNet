@@ -1,4 +1,6 @@
 ﻿
+using BussinessLogic.Logic;
+using Core.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -15,9 +17,10 @@ public class Startup
         Configuration = configuration;
     }
 
-    public void ConfigureServices(IServiceCollection service)
+    public void ConfigureServices(IServiceCollection services)
     {
-        service.AddControllers();
+        services.AddTransient<IProductRepository, ProductRepository>();
+        services.AddControllers();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

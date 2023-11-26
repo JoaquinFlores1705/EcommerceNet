@@ -4,6 +4,7 @@ using Core.Interfaces;
 using Core.Specifications;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using WebApi.Dtos;
@@ -23,11 +24,27 @@ namespace WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<ProductDto>>> GetProducts()
+        public async Task<ActionResult<Pagination<ProductDto>>> GetProducts([FromQuery]ProductSpecificationParams productParams)
         {
-            var spec = new ProductWithCategoryAndBrandSpecification();
+            var spec = new ProductWithCategoryAndBrandSpecification(productParams);
             var products = await _productRepository.GetAllWithSpec(spec);
-            return Ok(_mapper.Map<IReadOnlyList<Product>, IReadOnlyList<ProductDto>>(products));
+            var specCount = new ProductForCountingSpecification(productParams);
+            var totalProducts = await _productRepository.CountASync(specCount);
+            var rounded = Math.Ceiling(Convert.ToDecimal(totalProducts / productParams.PageSize));
+            var totalPages = Convert.ToInt32(rounded);
+            var data = _mapper.Map<IReadOnlyList<Product>, IReadOnlyList<ProductDto>>(products);
+            return Ok(
+                    new Pagination<ProductDto>
+                    {
+                        Count = totalProducts,
+                        Data = data,
+                        PageCount = totalPages,
+                        PageIndex = productParams.PageIndex,
+                        PageSize = productParams.PageSize,
+                    }
+                );
+            
+            //return Ok(_mapper.Map<IReadOnlyList<Product>, IReadOnlyList<ProductDto>>(products));
         }
 
         [HttpGet("{id}")]

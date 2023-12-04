@@ -1,9 +1,12 @@
 using BussinessLogic.Data;
+using Core.Entities;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
 namespace WebApi;
@@ -22,6 +25,11 @@ public class Program
                 var context = services.GetRequiredService<MarketDbContext>();
                 await context.Database.MigrateAsync();
                 await MarketDbContextData.LoadDataAsync(context, loggerFactory);
+
+                var userManager = services.GetRequiredService<UserManager<User>>();
+                var IdentityContext = services.GetRequiredService<SecurityDbContext>();
+                await IdentityContext.Database.MigrateAsync();
+                await SecurityDbContextData.SeedUserAync(userManager);
             }
             catch (System.Exception e)
             {

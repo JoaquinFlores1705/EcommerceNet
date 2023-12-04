@@ -1,9 +1,11 @@
 ﻿
 using BussinessLogic.Data;
 using BussinessLogic.Logic;
+using Core.Entities;
 using Core.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +26,14 @@ public class Startup
     public void ConfigureServices(IServiceCollection services)
     {
 
+        var builder = services.AddIdentityCore<User>();
+
+        builder = new IdentityBuilder(builder.UserType, builder.Services);
+        builder.AddEntityFrameworkStores<SecurityDbContext>();
+        builder.AddSignInManager<SignInManager<User>>();
+
+        services.AddAuthentication();
+
         services.AddAutoMapper(typeof(MappingProfiles));
 
         services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
@@ -31,6 +41,10 @@ public class Startup
         services.AddDbContext<MarketDbContext>(options =>
         {
             options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+        });
+        services.AddDbContext<SecurityDbContext>(x =>
+        {
+            x.UseSqlServer(Configuration.GetConnectionString("IdentitySecurity"));
         });
         services.AddTransient<IProductRepository, ProductRepository>();
         services.AddControllers();

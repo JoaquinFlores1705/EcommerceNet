@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using StackExchange.Redis;
 using System.Text;
 using WebApi.Dtos;
 using WebApi.Middleware;
@@ -62,8 +63,17 @@ public class Startup
         {
             x.UseSqlServer(Configuration.GetConnectionString("IdentitySecurity"));
         });
+
+        services.AddSingleton<IConnectionMultiplexer>(c =>
+        {
+            var configuration = ConfigurationOptions.Parse(Configuration.GetConnectionString("Redis"),true);
+            return ConnectionMultiplexer.Connect(configuration);
+        });
+
         services.AddTransient<IProductRepository, ProductRepository>();
         services.AddControllers();
+
+        services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
 
         services.AddCors( opt =>
         {

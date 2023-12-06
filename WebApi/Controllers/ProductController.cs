@@ -29,8 +29,8 @@ namespace WebApi.Controllers
             var spec = new ProductWithCategoryAndBrandSpecification(productParams);
             var products = await _productRepository.GetAllWithSpec(spec);
             var specCount = new ProductForCountingSpecification(productParams);
-            var totalProducts = await _productRepository.CountASync(specCount);
-            var rounded = Math.Ceiling(Convert.ToDecimal(totalProducts / productParams.PageSize));
+            int totalProducts = await _productRepository.CountASync(specCount);
+            var rounded = Math.Ceiling(Convert.ToDecimal(totalProducts) / productParams.PageSize);
             var totalPages = Convert.ToInt32(rounded);
             var data = _mapper.Map<IReadOnlyList<Product>, IReadOnlyList<ProductDto>>(products);
             return Ok(
@@ -59,6 +59,31 @@ namespace WebApi.Controllers
             }
 
             return _mapper.Map<Product, ProductDto>(product);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<Product>> Post(Product product)
+        {
+            var result = await _productRepository.Add(product);
+            if(result == 0)
+            {
+                throw new Exception("No se inserto el producto");
+            }
+
+            return Ok(product);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult<Product>> Put(int id, Product product)
+        {
+            product.Id = id;
+            var result = await _productRepository.Update(product);
+            if (result == 0)
+            {
+                throw new Exception("No se actualizo el producto");
+            }
+
+            return Ok(product);
         }
 
     }

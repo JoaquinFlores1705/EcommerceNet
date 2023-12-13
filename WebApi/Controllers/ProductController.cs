@@ -2,6 +2,7 @@
 using Core.Entities;
 using Core.Interfaces;
 using Core.Specifications;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -61,6 +62,7 @@ namespace WebApi.Controllers
             return _mapper.Map<Product, ProductDto>(product);
         }
 
+        [Authorize(Roles = "ADMIN")]
         [HttpPost]
         public async Task<ActionResult<Product>> Post(Product product)
         {
@@ -73,6 +75,7 @@ namespace WebApi.Controllers
             return Ok(product);
         }
 
+        [Authorize(Roles = "ADMIN")]
         [HttpPut("{id}")]
         public async Task<ActionResult<Product>> Put(int id, Product product)
         {

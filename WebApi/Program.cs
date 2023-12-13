@@ -27,9 +27,10 @@ public class Program
                 await MarketDbContextData.LoadDataAsync(context, loggerFactory);
 
                 var userManager = services.GetRequiredService<UserManager<User>>();
+                var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                 var IdentityContext = services.GetRequiredService<SecurityDbContext>();
                 await IdentityContext.Database.MigrateAsync();
-                await SecurityDbContextData.SeedUserAync(userManager);
+                await SecurityDbContextData.SeedUserAync(userManager, roleManager);
             }
             catch (System.Exception e)
             {

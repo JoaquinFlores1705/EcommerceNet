@@ -3,6 +3,7 @@ using BussinessLogic.Data;
 using BussinessLogic.Logic;
 using Core.Entities;
 using Core.Interfaces;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
@@ -35,6 +37,7 @@ public class Startup
         var builder = services.AddIdentityCore<User>();
 
         builder = new IdentityBuilder(builder.UserType, builder.Services);
+        builder.AddRoles<IdentityRole>();
         builder.AddEntityFrameworkStores<SecurityDbContext>();
         builder.AddSignInManager<SignInManager<User>>();
 
@@ -54,6 +57,7 @@ public class Startup
         services.AddAutoMapper(typeof(MappingProfiles));
 
         services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+        services.AddScoped(typeof(IGenericSecurityRepository<>), typeof(GenericSecurityRepository<>));
 
         services.AddDbContext<MarketDbContext>(options =>
         {
@@ -69,6 +73,8 @@ public class Startup
             var configuration = ConfigurationOptions.Parse(Configuration.GetConnectionString("Redis"),true);
             return ConnectionMultiplexer.Connect(configuration);
         });
+
+        services.TryAddSingleton<ISystemClock, SystemClock>();
 
         services.AddTransient<IProductRepository, ProductRepository>();
         services.AddControllers();

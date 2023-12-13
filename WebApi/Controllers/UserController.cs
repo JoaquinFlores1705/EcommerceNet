@@ -149,7 +149,7 @@ namespace WebApi.Controllers
             var spec = new UserSpecification(userparams);
             var users = await _securityRepository.GetAllWithSpec(spec);
             var specCount = new UserForCountingSpecification(userparams);
-            var totalUsers = await _securityRepository.CountASync(specCount);
+            var totalUsers = await _securityRepository.CountAsync(specCount);
             var rounded = Math.Ceiling(Convert.ToDecimal(totalUsers) / userparams.PageSize);
             var totalPages = Convert.ToInt32(rounded);
 

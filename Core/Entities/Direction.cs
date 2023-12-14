@@ -17,5 +17,6 @@ namespace Core.Entities
 
         public string Department { get; set; }
         public User User { get; set; }
+        public string Country { get; set; }
     }
 }

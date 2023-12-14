@@ -14,6 +14,8 @@ namespace WebApi.Dtos
             CreateMap<Direction, DirectionDto>().ReverseMap();
 
             CreateMap<User, UserDto>().ReverseMap();
+
+            CreateMap<DirectionDto, Core.Entities.OrderShop.Direction>();
         }
     }
 }

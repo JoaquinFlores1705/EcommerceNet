@@ -33,6 +33,7 @@ public class Startup
     {
 
         services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IOrderShopService, OrderShopService>();
 
         var builder = services.AddIdentityCore<User>();
 

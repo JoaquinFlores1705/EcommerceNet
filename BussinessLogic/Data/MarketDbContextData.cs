@@ -1,4 +1,5 @@
 ﻿using Core.Entities;
+using Core.Entities.OrderShop;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -54,6 +55,20 @@ namespace BussinessLogic.Data
 
                     context.SaveChangesAsync();
                 }
+
+                if (!context.ShippingTypes.Any())
+                {
+                    var shippingTypeData = File.ReadAllText("../BussinessLogic/LoadData/shippingtype.json");
+                    var shippingTypes = JsonSerializer.Deserialize<List<ShippingType>>(shippingTypeData);
+
+                    foreach (var shippingType in shippingTypes)
+                    {
+                        context.ShippingTypes.Add(shippingType);
+                    }
+
+                    context.SaveChangesAsync();
+                }
+
             }
 			catch (Exception e)
 			{

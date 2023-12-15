@@ -1,6 +1,7 @@
 ﻿using Core.Entities;
 using Core.Entities.OrderShop;
 using Core.Interfaces;
+using Core.Specifications;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,17 +13,13 @@ namespace BussinessLogic.Logic
 {
     public class OrderShopService : IOrderShopService
     {
-        private readonly IGenericRepository<OrderShop> _orderShopRepository;
-        private readonly IGenericRepository<Product> _productRepository;
         private readonly IShoppingCartRepository _shopCartRepository;
-        private readonly IGenericRepository<ShippingType> _shippingTypeRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public OrderShopService(IGenericRepository<OrderShop> orderShopRepository, IGenericRepository<Product> productRepository, IShoppingCartRepository shopCartRepository, IGenericRepository<ShippingType> shippingTypeRepository)
+        public OrderShopService(IShoppingCartRepository shopCartRepository, IUnitOfWork unitOfWork)
         {
-            _orderShopRepository = orderShopRepository;
-            _productRepository = productRepository;
             _shopCartRepository = shopCartRepository;
-            _shippingTypeRepository = shippingTypeRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<OrderShop> AddOrderShopAsync(string buyerEmail, int shippingType, string cartId, Direction direction)
@@ -33,34 +30,47 @@ namespace BussinessLogic.Logic
 
             foreach (var item in cartShop.Items)
             {
-                var productItem = await _productRepository.GetByIdAsync(item.Id);
+                var productItem = await _unitOfWork.Repository<Product>().GetByIdAsync(item.Id);
                 var orderedItem = new ProductItemOrder(productItem.Id, productItem.Name, productItem.Image);
                 var orderItem = new OrderItem(orderedItem, productItem.Price, item.Amount);
                 items.Add(orderItem);
             }
 
-            var shippingTypeEntity = await _shippingTypeRepository.GetByIdAsync(shippingType);
+            var shippingTypeEntity = await _unitOfWork.Repository<ShippingType>().GetByIdAsync(shippingType);
 
             var subtotal = items.Sum(i => i.Price * i.Amount);
 
             var orderShop = new OrderShop(buyerEmail, direction, shippingTypeEntity, items,subtotal);
 
+            _unitOfWork.Repository<OrderShop>().AddEntity(orderShop);
+
+            var result = await _unitOfWork.Complete();
+
+            if(result <= 0)
+            {
+                return null;
+            }
+
+            await _shopCartRepository.DeleteShoppingCartAsync(cartId);
+
             return orderShop;
         }
 
-        public Task<IReadOnlyList<OrderShop>> GetOrderShopByUserEmailAsync(string email)
+        public async Task<IReadOnlyList<OrderShop>> GetOrderShopByUserEmailAsync(string email)
         {
-            throw new NotImplementedException();
+            var spec = new OrderShopWithItemsSpecification(email);
+            return await _unitOfWork.Repository<OrderShop>().GetAllWithSpec(spec);
         }
 
-        public Task<OrderShop> GetOrderShopOrderByIdAsync(int id, string email)
+        public async Task<OrderShop> GetOrderShopOrderByIdAsync(int id, string email)
         {
-            throw new NotImplementedException();
+            var spec = new OrderShopWithItemsSpecification(id, email);
+            return await _unitOfWork.Repository<OrderShop>().GetByIdWithSpec(spec);
         }
 
-        public Task<IReadOnlyList<ShippingType>> GetShippingTypeAsync()
+        public async Task<IReadOnlyList<ShippingType>> GetShippingTypeAsync()
         {
-            throw new NotImplementedException();
+            return await _unitOfWork.Repository<ShippingType>().GetAllAsync();
         }
     }
 }
